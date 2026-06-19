@@ -132,7 +132,7 @@
 
 # 
 
-# \*\*Room là nguồn sự thật duy nhất.\*\* `refreshArticles()` ghi dữ liệu vào Room; giao diện lắng nghe Room qua `Flow`. Nhờ đó, màn hình luôn hiển thị dữ liệu từ ổ đĩa — pull-to-refresh không bao giờ chặn danh sách và chức năng đọc offline hoạt động tự nhiên.
+# \*\*`refreshArticles()` ghi dữ liệu vào Room; giao diện lắng nghe Room qua `Flow`. Nhờ đó, màn hình luôn hiển thị dữ liệu từ ổ đĩa — pull-to-refresh không bao giờ chặn danh sách và chức năng đọc offline hoạt động tự nhiên.
 
 # 
 
@@ -169,10 +169,6 @@
 # 
 
 # \- \*\*UX lỗi chi tiết hơn.\*\* Hiện tại lỗi chỉ hiển thị nút retry đơn giản. Phân biệt lỗi mạng với lỗi hết quota API (HTTP 429) và hiển thị thông báo phù hợp sẽ cải thiện trải nghiệm người dùng.
-
-# 
-
-# \- \*\*Chiến lược cache ảnh.\*\* Cache mặc định của Coil đã hoạt động tốt, nhưng prefetch thumbnail cho trang tiếp theo (trong khi người dùng đọc bài) và đặt header cache-control rõ ràng sẽ giảm trạng thái loading hiển thị.
 
 # 
 
