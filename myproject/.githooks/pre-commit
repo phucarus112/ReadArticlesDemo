@@ -1,4 +1,7 @@
 #!/bin/sh
+# Hook runs from the git repo root (UPLIVE-Test); the Gradle project is in myproject/
+cd "$(dirname "$0")/.." || exit 1
+
 echo "Running ktlintFormat before commit..."
 ./gradlew ktlintFormat
 STATUS=$?
