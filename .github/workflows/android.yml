@@ -33,8 +33,9 @@ jobs:
 
       - name: ktlint format check
         run: |
+          git config core.fileMode false
           ./gradlew ktlintFormat
-          git diff --exit-code || (echo "ktlint found unformatted files. Run ./gradlew ktlintFormat locally." && exit 1)
+          git diff --exit-code -- '*.kt' '*.kts' || (echo "ktlint found unformatted files. Run ./gradlew ktlintFormat locally." && exit 1)
 
       - name: Static Analysis
         run: ./gradlew staticAnalysis
