@@ -1,186 +1,150 @@
-# \# News Digest
+# News Digest
 
-# 
+Ứng dụng **Kotlin Multiplatform (KMP)** hiển thị tin tức nổi bật từ [NewsAPI.org](https://newsapi.org), cho phép lưu bookmark để đọc offline và nhận thông báo nền khi có bài viết mới. UI được viết một lần bằng **Compose Multiplatform**, sẵn sàng mở rộng sang iOS.
 
-# Ứng dụng Android hiển thị các tin tức nổi bật từ \[NewsAPI.org](https://newsapi.org), cho phép người dùng lưu bookmark để đọc offline và nhận thông báo khi có bài viết mới.
+> **Cấu trúc repo:** toàn bộ code nằm trong thư mục con **`myproject/`**, không phải ở gốc repo. Mọi lệnh Gradle chạy từ trong `myproject/`.
 
-# 
+---
 
-# \---
+## Tech Stack
 
-# 
+| Lớp | Công nghệ |
+|-----|-----------|
+| Ngôn ngữ | Kotlin 2.1, Kotlin Multiplatform |
+| UI | Compose Multiplatform (`commonMain`) |
+| DI | Koin (KMP-compatible, không annotation) |
+| Networking | Ktor Client + engine OkHttp |
+| Serialization | kotlinx.serialization |
+| Database | Room KMP 2.7 (source of truth) |
+| Background | WorkManager (`PeriodicWorkRequest` 15 phút) |
+| Ảnh | Coil |
+| Điều hướng | Navigation Compose |
+| Debug mạng | Chucker (chỉ bản debug) |
+| Phát hiện leak | LeakCanary (chỉ bản debug) |
+| Static analysis | ktlint, detekt, Android Lint |
+| CI | GitHub Actions |
 
-# \## Hướng Dẫn Build và Chạy
+---
 
-# 
+## Hướng dẫn Build và Chạy
 
-# \### Yêu cầu
+### Yêu cầu
 
-# 
+| Công cụ | Phiên bản |
+|---------|-----------|
+| Android Studio | Ladybug trở lên |
+| JDK | 17 trở lên (CI dùng Temurin 17; máy dev dùng JDK nào cũng được, Gradle tự nhận qua `JAVA_HOME`) |
+| Android SDK | API 35 (compile) / API 26 tối thiểu |
 
-# | Công cụ | Phiên bản |
+> JDK **không còn bị hardcode** trong `gradle.properties` — Gradle dùng JDK mà môi trường cung cấp, nên project chạy được trên cả máy local lẫn CI.
 
-# |---------|-----------|
+### Cấu hình API Key
 
-# | Android Studio | Hedgehog trở lên |
+1. Đăng ký key miễn phí tại <https://newsapi.org/register>.
+2. Mở (hoặc tạo) file `myproject/local.properties`.
+3. Thêm dòng:
+   ```
+   NEWS_API_KEY=your_key_here
+   ```
+   `local.properties` đã nằm trong `.gitignore` và **không bao giờ được commit**. Key được inject vào `BuildConfig` lúc build → `ApiConfig.NEWS_API_KEY`.
 
-# | JDK | 18.0.2 (JDK hệ thống, \*\*không dùng\*\* JBR của Android Studio) |
+Với build trên CI, key được nạp từ **GitHub Actions secret** tên `NEWS_API_KEY` (Settings → Secrets and variables → Actions).
 
-# | Android SDK | API 35 (compile) / API 26 tối thiểu |
+### Build & Chạy
 
-# 
+```bash
+cd myproject
 
-# > \*\*Lưu ý JDK:\*\* `gradle.properties` trỏ Gradle đến `C:\\Program Files\\Java\\jdk-18.0.2`. Nếu JDK của bạn cài ở chỗ khác, hãy cập nhật `org.gradle.java.home` trong `gradle.properties` cho phù hợp.
+# Build APK debug
+./gradlew assembleDebug
 
-# 
+# Cài trực tiếp lên thiết bị/máy ảo đang kết nối
+./gradlew installDebug
+```
 
-# \### Cấu hình API Key
+Hoặc mở project bằng Android Studio và nhấn **Run** (Shift+F10).
 
-# 
+---
 
-# 1\. Đăng ký key miễn phí tại <https://newsapi.org/register>.
+## Kiến trúc
 
-# 2\. Mở (hoặc tạo) file `local.properties` ở thư mục gốc của project.
+### Clean Architecture + MVI trên nền KMP
 
-# 3\. Thêm dòng sau:
+```
+commonMain/                     ← code chạy mọi platform
+├── presentation/   Compose UI, ViewModel, UiState, Intent (MVI)
+├── domain/         Use case, interface repository, domain model
+├── data/           Room, Ktor, repository implementation
+├── platform/       expect fun: scheduleBackgroundSync, showNewArticlesNotification
+└── util/           expect: ApiConfig, UrlEncoder
 
-# &#x20;  ```
+androidMain/                    ← implementation riêng Android
+├── data/di/        Koin module, NewsSyncWorker (WorkManager)
+├── platform/       actual: WorkManager, NotificationManager
+├── util/           actual: BuildConfig, java.net.URLEncoder
+└── MyApplication, MainActivity
+```
 
-# &#x20;  NEWS\_API\_KEY=your\_key\_here
+### Luồng dữ liệu một chiều (unidirectional)
 
-# &#x20;  ```
+```
+Người dùng → ViewModel.handleIntent(ArticlesIntent) → UseCase → Repository
+                                                                    ↓
+                                                     Room (source of truth)
+                                                                    ↓
+                              ViewModel ← StateFlow ← Dao.observe*() (Flow)
+                                  ↓
+                       Compose UI (collectAsStateWithLifecycle)
+```
 
-# &#x20;  `local.properties` đã có trong `.gitignore` và \*\*không bao giờ được commit\*\* lên source control.
+### Các quyết định thiết kế nổi bật
 
-# 
+**Room là source of truth.** `refreshArticles()` ghi dữ liệu vào Room; UI lắng nghe Room qua `Flow`. Nhờ đó màn hình luôn hiển thị dữ liệu từ ổ đĩa — pull-to-refresh không chặn danh sách, và đọc offline hoạt động tự nhiên.
 
-# \### Build \& Chạy
+**MVI với sealed class `ArticlesIntent`.** Mọi hành động người dùng được mô hình hóa thành intent có kiểu rõ ràng, gửi vào một hàm `handleIntent()` duy nhất — state machine dễ đọc, dễ test.
 
-# 
+**Koin thay Hilt.** Hilt chỉ chạy Android; Koin tương thích KMP nên dùng chung được cho cả iOS sau này. Khai báo bằng DSL thuần (`single`, `factory`, `viewModelOf`), không cần annotation hay annotation processor.
 
-# ```bash
+**`expect`/`actual` cho phần platform-specific.** Business logic + UI viết một lần ở `commonMain`; chỉ WorkManager, Notification, BuildConfig, URL encoding mới có bản `actual` riêng cho Android. Thêm iOS chỉ cần viết thêm các `actual`.
 
-# \# Build APK debug
+**Ktor engine OkHttp.** Chọn engine OkHttp (thay vì Android) để **Chucker** cắm được vào tầng interceptor, xem toàn bộ request/response khi debug. Bản release dùng `chucker-no-op` nên không ảnh hưởng production.
 
-# ./gradlew assembleDebug
+**`BuildConfig` cho thông tin nhạy cảm.** API key đọc từ `local.properties` lúc build, inject vào `BuildConfig`. Không có secret nào nằm trong source code.
 
-# 
+---
 
-# \# Cài trực tiếp lên thiết bị/máy ảo đang kết nối
+## Static Analysis & CI
 
-# ./gradlew installDebug
+Gộp 3 công cụ vào một task:
 
-# ```
+```bash
+cd myproject
+./gradlew staticAnalysis   # ktlint + detekt + Android Lint
+```
 
-# 
+Pre-commit hook tự chạy `ktlintFormat` trước mỗi commit — cài một lần:
 
-# Hoặc mở project bằng Android Studio và nhấn \*\*Run\*\* (Shift+F10).
+```bash
+git config core.hooksPath myproject/.githooks
+```
 
-# 
+**GitHub Actions** (`.github/workflows/android.yml`) chạy mỗi lần push/PR vào `main`:
 
-# \---
+```
+checkout → JDK 17 → ktlint format check → staticAnalysis
+        → testDebugUnitTest → assembleDebug + bundleDebug
+        → upload APK/AAB lên Artifacts
+```
 
-# 
+APK/AAB tải về ở tab **Actions** → chọn run xanh → mục **Artifacts** (cuối trang).
 
-# \## Kiến Trúc
+---
 
-# 
+## Hướng cải thiện nếu có thêm thời gian
 
-# \### Clean Architecture + MVI
-
-# 
-
-# ```
-
-# presentation/   ← Compose, ViewModel, UiState, Intent
-
-# domain/         ← Use case, interface repository, domain model
-
-# data/           ← Room, Retrofit, WorkManager, implementation repository
-
-# util/           ← ApiConfig, NotificationHelper
-
-# ```
-
-# 
-
-# \*\*Luồng dữ liệu một chiều (unidirectional):\*\*
-
-# 
-
-# ```
-
-# Người dùng → ViewModel.handleIntent() → UseCase → Repository
-
-# &#x20;                                                       ↓
-
-# &#x20;                                             Room (source of truth)
-
-# &#x20;                                                       ↓
-
-# &#x20;                             ViewModel ← StateFlow ← Dao.observe\*()
-
-# &#x20;                                 ↓
-
-# &#x20;                           Compose UI (collectAsStateWithLifecycle)
-
-# ```
-
-# 
-
-# \### Các quyết định thiết kế nổi bật
-
-# 
-
-# \*\*`refreshArticles()` ghi dữ liệu vào Room; giao diện lắng nghe Room qua `Flow`. Nhờ đó, màn hình luôn hiển thị dữ liệu từ ổ đĩa — pull-to-refresh không bao giờ chặn danh sách và chức năng đọc offline hoạt động tự nhiên.
-
-# 
-
-# \*\*MVI với sealed class `ArticlesIntent`.\*\* Tất cả hành động của người dùng được mô hình hóa thành các intent có kiểu rõ ràng, gửi vào một hàm `handleIntent()` duy nhất trên ViewModel, giúp state machine dễ đọc và dễ test.
-
-# 
-
-# \*\*`@Immutable` trên domain model.\*\* Đánh dấu `Article` bằng `@Immutable` giúp Compose compiler bỏ qua recompose cho các item trong danh sách không có dữ liệu thay đổi, giảm lag khi cuộn.
-
-# 
-
-# \*\*WorkManager + `HiltWorkerFactory`.\*\* Đồng bộ nền chạy mỗi 15 phút qua `PeriodicWorkRequest`. Auto-initializer mặc định của WorkManager bị tắt trong manifest để Hilt có thể cung cấp worker factory, giữ DI nhất quán toàn app.
-
-# 
-
-# \*\*`BuildConfig` cho thông tin nhạy cảm.\*\* API key được đọc từ `local.properties` lúc build và inject vào `BuildConfig`. Không có secret nào tồn tại trong source code.
-
-# 
-
-# \---
-
-# 
-
-# \## Hướng Cải Thiện Nếu Có Thêm Thời Gian
-
-# 
-
-# \- \*\*Phân trang (Pagination).\*\* NewsAPI hỗ trợ `page` và `pageSize`. Tích hợp Jetpack Paging 3 sẽ cho phép danh sách tải thêm dần thay vì giới hạn cứng 30 bài.
-
-# 
-
-# \- \*\*Tìm kiếm.\*\* Thanh tìm kiếm kết hợp debounce gọi API hoặc full-text search của Room (`FTS4`) sẽ nâng cao đáng kể tính hữu dụng của app.
-
-# 
-
-# \- \*\*UX lỗi chi tiết hơn.\*\* Hiện tại lỗi chỉ hiển thị nút retry đơn giản. Phân biệt lỗi mạng với lỗi hết quota API (HTTP 429) và hiển thị thông báo phù hợp sẽ cải thiện trải nghiệm người dùng.
-
-# 
-
-# \- \*\*Unit test cho use case và ViewModel.\*\* Kiến trúc hiện tại hoàn toàn có thể test — use case là hàm thuần túy trên interface repository, ViewModel expose `StateFlow` có thể collect trong `runTest`. Đây là bước tiếp theo có giá trị cao nhất.
-
-# 
-
-# \- \*\*CI pipeline.\*\* Một workflow GitHub Actions chạy `./gradlew test lint` trên mỗi PR sẽ phát hiện lỗi sớm.
-
-# 
-
-# \- \*\*Proguard / R8 cho bản release.\*\* `isMinifyEnabled` hiện đang là `false`; bật lên với file rules phù hợp sẽ giảm kích thước APK và obfuscate binary.
-
-
-
+- **Mở rộng sang iOS.** Kiến trúc KMP đã sẵn sàng — chỉ cần thêm source set `iosMain` và implement các `actual fun` (BGTaskScheduler, UNUserNotificationCenter, Ktor Darwin engine).
+- **Phân trang.** Tích hợp Paging 3 để tải thêm dần thay vì giới hạn cứng số bài.
+- **Tìm kiếm.** Thanh tìm kiếm với debounce hoặc full-text search của Room (`FTS4`).
+- **UX lỗi chi tiết.** Phân biệt lỗi mạng với lỗi hết quota (HTTP 429) và hiển thị thông báo phù hợp.
+- **Mở rộng test.** Đã có unit test (MockEngine) + integration test (Room in-memory) + UI test (Compose). Bổ sung coverage cho các use case còn lại.
+- **Proguard / R8.** `isMinifyEnabled` hiện là `false`; bật lên với rules phù hợp để giảm kích thước và obfuscate bản release.

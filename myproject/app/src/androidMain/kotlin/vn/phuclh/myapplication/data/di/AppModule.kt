@@ -1,8 +1,9 @@
 package vn.phuclh.myapplication.data.di
 
 import androidx.room.Room
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -31,7 +32,11 @@ val appModule =
     module {
 
         single {
-            HttpClient(Android) {
+            HttpClient(OkHttp) {
+                engine {
+                    // Chucker attaches at the OkHttp layer; no-op variant in release builds
+                    addInterceptor(ChuckerInterceptor.Builder(androidContext()).build())
+                }
                 defaultRequest { url(ApiConfig.BASE_URL) }
                 install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
                 install(Logging) { level = LogLevel.BODY }

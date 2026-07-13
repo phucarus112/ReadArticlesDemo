@@ -65,8 +65,8 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
 
-            // Ktor Android engine
-            implementation(libs.ktor.client.android)
+            // Ktor OkHttp engine (needed so Chucker can attach as an OkHttp interceptor)
+            implementation(libs.ktor.client.okhttp)
 
             // WorkManager
             implementation("androidx.work:work-runtime-ktx:2.10.0")
@@ -170,6 +170,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.8")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
