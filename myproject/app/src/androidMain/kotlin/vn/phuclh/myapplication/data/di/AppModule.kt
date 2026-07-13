@@ -21,6 +21,7 @@ import vn.phuclh.myapplication.data.repository.ArticleRepositoryImpl
 import vn.phuclh.myapplication.domain.repository.ArticleRepository
 import vn.phuclh.myapplication.domain.usecase.GetArticlesUseCase
 import vn.phuclh.myapplication.domain.usecase.GetBookmarksUseCase
+import vn.phuclh.myapplication.domain.usecase.MarkArticlesSeenUseCase
 import vn.phuclh.myapplication.domain.usecase.RefreshArticlesUseCase
 import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
 import vn.phuclh.myapplication.presentation.articles.ArticlesViewModel
@@ -61,6 +62,7 @@ val appModule =
         factory { GetBookmarksUseCase(get()) }
         factory { RefreshArticlesUseCase(get()) }
         factory { ToggleBookmarkUseCase(get()) }
+        factory { MarkArticlesSeenUseCase(get()) }
 
         viewModelOf(::ArticlesViewModel)
         viewModelOf(::BookmarkViewModel)

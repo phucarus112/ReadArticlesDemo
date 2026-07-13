@@ -8,11 +8,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import vn.phuclh.myapplication.domain.usecase.GetArticlesUseCase
+import vn.phuclh.myapplication.domain.usecase.MarkArticlesSeenUseCase
 import vn.phuclh.myapplication.domain.usecase.RefreshArticlesUseCase
+import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
 
 class ArticlesViewModel(
     private val getArticlesUseCase: GetArticlesUseCase,
     private val refreshArticlesUseCase: RefreshArticlesUseCase,
+    private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
+    private val markArticlesSeenUseCase: MarkArticlesSeenUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ArticlesUiState(isLoading = true))
     val uiState: StateFlow<ArticlesUiState> = _uiState.asStateFlow()
@@ -26,8 +30,14 @@ class ArticlesViewModel(
         when (intent) {
             is ArticlesIntent.FetchData -> refresh(isInitial = true)
             is ArticlesIntent.RefreshData -> refresh(isInitial = false)
-            is ArticlesIntent.ToggleBookmark -> Unit
-            is ArticlesIntent.MarkAllArticlesSeen -> Unit
+            is ArticlesIntent.ToggleBookmark ->
+                viewModelScope.launch {
+                    toggleBookmarkUseCase(intent.url, intent.isBookmarked)
+                }
+            is ArticlesIntent.MarkAllArticlesSeen ->
+                viewModelScope.launch {
+                    markArticlesSeenUseCase()
+                }
         }
     }
 
