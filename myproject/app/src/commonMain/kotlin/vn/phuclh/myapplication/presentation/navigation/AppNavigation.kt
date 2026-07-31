@@ -1,11 +1,13 @@
 package vn.phuclh.myapplication.presentation.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -75,8 +77,14 @@ fun AppNavigation() {
                 }
             }
         },
-    ) { _ ->
-        NavHost(navController = navController, startDestination = Screen.Articles.route) {
+    ) { innerPadding ->
+        // Chỉ lấy bottom inset (chiều cao NavigationBar) để item cuối không bị che;
+        // top/status bar để mỗi màn con tự xử lý qua Scaffold riêng của nó
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Articles.route,
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+        ) {
             composable(Screen.Articles.route) {
                 ArticlesScreen(onArticleClick = { navController.navigate(Screen.Detail.createRoute(it)) })
             }
