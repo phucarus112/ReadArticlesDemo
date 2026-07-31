@@ -1,4 +1,4 @@
-package vn.phuclh.myapplication
+package vn.phuclh.myapplication.unitTest
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine

@@ -10,7 +10,7 @@ import vn.phuclh.myapplication.domain.usecase.GetBookmarksUseCase
 import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
 
 class BookmarkViewModel(
-    getBookmarksUseCase: GetBookmarksUseCase,
+    private val getBookmarksUseCase: GetBookmarksUseCase,
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
 ) : ViewModel() {
     val uiState =
