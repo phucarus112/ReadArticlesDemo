@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         enableEdgeToEdge()
-        Event.register(this)
         setContent {
             MyApplicationTheme {
                 AppNavigation()
