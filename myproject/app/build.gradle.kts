@@ -41,6 +41,7 @@ kotlin {
 
             // Koin
             implementation(libs.koin.core)
+            implementation(libs.koin.core.viewmodel)
 
             // Ktor
             implementation(libs.ktor.client.content.negotiation)
@@ -89,6 +90,7 @@ kotlin {
         }
 
         commonTest.dependencies {
+            implementation(kotlin("test"))
             implementation(libs.ktor.client.mock)
             implementation(libs.coroutines.test)
         }

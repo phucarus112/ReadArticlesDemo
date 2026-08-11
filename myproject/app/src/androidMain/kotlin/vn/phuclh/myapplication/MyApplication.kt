@@ -7,7 +7,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import vn.phuclh.myapplication.data.di.appModule
+import vn.phuclh.myapplication.data.di.androidModule
+import vn.phuclh.myapplication.data.di.commonModule
 import vn.phuclh.myapplication.platform.scheduleBackgroundSync
 import vn.phuclh.myapplication.util.NotificationHelper
 
@@ -20,7 +21,7 @@ class MyApplication : Application() {
 
         startKoin {
             androidContext(this@MyApplication)
-            modules(appModule)
+            modules(commonModule, androidModule)
         }
 
         NotificationHelper.createChannel(this)

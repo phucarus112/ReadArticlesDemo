@@ -6,10 +6,10 @@ import vn.phuclh.myapplication.domain.model.Article
 import vn.phuclh.myapplication.domain.repository.ArticleRepository
 
 /**
-Created by phuclh37@fpt.com on 31-Jul-26.
-Copyright (c) 2023 FPT Telecom. All rights reserved.
+ * Fake thay cho mock framework: implement thẳng interface repository.
+ * Vừa đóng vai Stub (trả dữ liệu định sẵn) vừa đóng vai Mock (ghi lại lời gọi để verify).
+ * Không cần bytecode magic nên chạy được trên KMP (JVM/iOS/…).
  */
-
 class FakeArticleRepository : ArticleRepository {
     val articlesFlow = MutableStateFlow<List<Article>>(emptyList())
 

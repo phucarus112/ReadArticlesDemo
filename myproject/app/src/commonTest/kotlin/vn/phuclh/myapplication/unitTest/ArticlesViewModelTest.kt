@@ -7,39 +7,33 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 import vn.phuclh.myapplication.domain.usecase.GetArticlesUseCase
 import vn.phuclh.myapplication.domain.usecase.MarkArticlesSeenUseCase
 import vn.phuclh.myapplication.domain.usecase.RefreshArticlesUseCase
 import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
 import vn.phuclh.myapplication.presentation.articles.ArticlesIntent
 import vn.phuclh.myapplication.presentation.articles.ArticlesViewModel
-
-/**
- * Fake thay cho Mockito: implement thẳng interface repository.
- * Gọn hơn mock framework, không cần bytecode magic, và chạy được trên KMP.
- * Vừa đóng vai Stub (trả dữ liệu định sẵn) vừa đóng vai Mock (ghi lại lời gọi để verify).
- */
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ArticlesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private lateinit var repository: FakeArticleRepository
 
-    @Before
+    @BeforeTest
     fun setup() {
         // viewModelScope chạy trên Dispatchers.Main -> phải thay bằng test dispatcher
         Dispatchers.setMain(dispatcher)
         repository = FakeArticleRepository()
     }
 
-    @After
+    @AfterTest
     fun teardown() {
         Dispatchers.resetMain()
     }

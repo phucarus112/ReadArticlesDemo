@@ -8,7 +8,7 @@ import vn.phuclh.myapplication.data.local.ArticleEntity
 
 /**
  * Fake DAO trong bộ nhớ — mô phỏng hành vi Room mà không cần DB thật.
- * Cho phép unit test ArticleRepositoryImpl trên JVM (không cần emulator).
+ * Cho phép unit test ArticleRepositoryImpl trên mọi target (không cần emulator).
  */
 class FakeArticleDao : ArticleDao {
     val articles = MutableStateFlow<List<ArticleEntity>>(emptyList())

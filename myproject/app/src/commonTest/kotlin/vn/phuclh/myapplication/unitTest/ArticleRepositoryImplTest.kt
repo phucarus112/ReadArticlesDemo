@@ -12,12 +12,12 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import vn.phuclh.myapplication.data.api.NewsApiService
 import vn.phuclh.myapplication.data.repository.ArticleRepositoryImpl
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ArticleRepositoryImplTest {
     // ---- Helpers dựng NewsApiService với response giả qua MockEngine ----

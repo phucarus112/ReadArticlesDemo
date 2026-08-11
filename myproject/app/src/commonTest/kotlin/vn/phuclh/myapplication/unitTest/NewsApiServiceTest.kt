@@ -11,9 +11,10 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import vn.phuclh.myapplication.data.api.NewsApiService
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class NewsApiServiceTest {
     private val successJson =
@@ -92,7 +93,7 @@ class NewsApiServiceTest {
             assertEquals(0, response.articles.size)
         }
 
-    @Test(expected = Exception::class)
+    @Test
     fun `getTopHeadlines throws on server error`() =
         runTest {
             val engine =
@@ -105,6 +106,8 @@ class NewsApiServiceTest {
                 }
 
             val service = NewsApiService(buildClient(engine))
-            service.getTopHeadlines()
+            assertFailsWith<Exception> {
+                service.getTopHeadlines()
+            }
         }
 }

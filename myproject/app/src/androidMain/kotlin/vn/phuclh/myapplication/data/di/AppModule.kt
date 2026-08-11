@@ -11,37 +11,18 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModel
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import vn.phuclh.myapplication.data.api.AuthInterceptor
-import vn.phuclh.myapplication.data.api.NewsApiService
 import vn.phuclh.myapplication.data.local.AppDatabase
-import vn.phuclh.myapplication.data.repository.ArticleRepositoryImpl
-import vn.phuclh.myapplication.domain.repository.ArticleRepository
-import vn.phuclh.myapplication.domain.usecase.GetArticlesUseCase
-import vn.phuclh.myapplication.domain.usecase.GetBookmarksUseCase
-import vn.phuclh.myapplication.domain.usecase.MarkArticlesSeenUseCase
-import vn.phuclh.myapplication.domain.usecase.RefreshArticlesUseCase
-import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
-import vn.phuclh.myapplication.presentation.articles.ArticlesViewModel
-import vn.phuclh.myapplication.presentation.bookmarks.BookmarkViewModel
-import vn.phuclh.myapplication.presentation.detail.DetailViewModel
 import vn.phuclh.myapplication.util.ApiConfig
 
-val appModule =
+// androidModule: CHỈ chứa những gì buộc phải phụ thuộc nền tảng Android —
+// HttpClient engine (OkHttp), Room database builder (cần Context), DAO.
+// Repository, use case, view model đã nằm ở commonModule (dùng chung đa nền tảng).
+val androidModule =
     module {
 
         single {
-            // Pin the public keys of newsapi.org's leaf cert + intermediate CA.
-            // Always include ≥2 pins (leaf + backup/intermediate) so a cert rotation
-            // doesn't lock users out of the app before an update is pushed.
-            // To get fresh pins:
-            //   openssl s_client -connect newsapi.org:443 -showcerts </dev/null 2>/dev/null \
-            //     | openssl x509 -noout -pubkey \
-            //     | openssl pkey -pubin -outform DER \
-            //     | openssl dgst -sha256 -binary | base64
-
             HttpClient(OkHttp) {
                 engine {
                     // Chucker attaches at the OkHttp layer; no-op variant in release builds
@@ -54,8 +35,6 @@ val appModule =
             }
         }
 
-        single { NewsApiService(get()) }
-
         single {
             Room
                 .databaseBuilder(androidContext(), AppDatabase::class.java, "news_digest.db")
@@ -64,16 +43,4 @@ val appModule =
         }
 
         single { get<AppDatabase>().articleDao() }
-
-        single<ArticleRepository> { ArticleRepositoryImpl(get(), get()) }
-
-        factory { GetArticlesUseCase(get()) }
-        factory { GetBookmarksUseCase(get()) }
-        factory { RefreshArticlesUseCase(get()) }
-        factory { ToggleBookmarkUseCase(get()) }
-        factory { MarkArticlesSeenUseCase(get()) }
-
-        viewModelOf(::ArticlesViewModel)
-        viewModelOf(::BookmarkViewModel)
-        viewModel { params -> DetailViewModel(get(), get(), params.get()) }
     }

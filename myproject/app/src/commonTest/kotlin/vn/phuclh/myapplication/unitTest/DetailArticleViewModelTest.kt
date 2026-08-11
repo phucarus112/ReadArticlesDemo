@@ -7,27 +7,27 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 import vn.phuclh.myapplication.domain.usecase.ToggleBookmarkUseCase
 import vn.phuclh.myapplication.presentation.detail.DetailUiState
 import vn.phuclh.myapplication.presentation.detail.DetailViewModel
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DetailArticleViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private lateinit var repository: FakeArticleRepository
 
-    @Before
+    @BeforeTest
     fun setup() {
         Dispatchers.setMain(dispatcher)
         repository = FakeArticleRepository()
     }
 
-    @After
+    @AfterTest
     fun teardown() {
         Dispatchers.resetMain()
     }
