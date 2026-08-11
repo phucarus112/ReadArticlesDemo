@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyProject"
 include ':app'
+include ':benchmark'
+include ':baselineprofile'

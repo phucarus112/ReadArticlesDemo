@@ -33,6 +33,15 @@ val appModule =
     module {
 
         single {
+            // Pin the public keys of newsapi.org's leaf cert + intermediate CA.
+            // Always include ≥2 pins (leaf + backup/intermediate) so a cert rotation
+            // doesn't lock users out of the app before an update is pushed.
+            // To get fresh pins:
+            //   openssl s_client -connect newsapi.org:443 -showcerts </dev/null 2>/dev/null \
+            //     | openssl x509 -noout -pubkey \
+            //     | openssl pkey -pubin -outform DER \
+            //     | openssl dgst -sha256 -binary | base64
+
             HttpClient(OkHttp) {
                 engine {
                     // Chucker attaches at the OkHttp layer; no-op variant in release builds

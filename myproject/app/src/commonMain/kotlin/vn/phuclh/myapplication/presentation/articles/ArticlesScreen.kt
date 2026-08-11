@@ -70,14 +70,19 @@ fun ArticlesScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         items(uiState.articles, key = { it.url }) { article ->
+                            val onClick = remember(article.url) { { onArticleClick(article.url) } }
+                            val onBookmark =
+                                remember(article.url, article.isBookmarked) {
+                                    {
+                                        viewModel.handleIntent(
+                                            ArticlesIntent.ToggleBookmark(article.url, !article.isBookmarked),
+                                        )
+                                    }
+                                }
                             ArticleItem(
                                 article = article,
-                                onClick = { onArticleClick(article.url) },
-                                onBookmarkToggle = {
-                                    viewModel.handleIntent(
-                                        ArticlesIntent.ToggleBookmark(article.url, !article.isBookmarked),
-                                    )
-                                },
+                                onClick = onClick,
+                                onBookmarkToggle = onBookmark,
                             )
                         }
                     }

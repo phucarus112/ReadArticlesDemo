@@ -2,6 +2,7 @@ package vn.phuclh.myapplication.presentation.articles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +45,7 @@ class ArticlesViewModel(
     private fun observeArticles() {
         viewModelScope.launch {
             getArticlesUseCase().collect { articles ->
-                _uiState.update { it.copy(articles = articles, isLoading = false) }
+                _uiState.update { it.copy(articles = articles.toImmutableList(), isLoading = false) }
             }
         }
     }

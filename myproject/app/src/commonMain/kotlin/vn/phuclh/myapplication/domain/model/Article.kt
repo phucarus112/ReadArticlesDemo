@@ -1,5 +1,8 @@
 package vn.phuclh.myapplication.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Article(
     val url: String,
     val title: String,

@@ -50,6 +50,9 @@ kotlin {
             // Room KMP
             implementation(libs.room.runtime)
 
+            // Immutable collections — stable types cho Compose
+            implementation(libs.immutable.collections)
+
             // Coroutines
             implementation(libs.coroutines.android)
 
@@ -113,6 +116,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Dùng debug signing cho release khi chạy benchmark local
+            // KHÔNG làm vậy với APK production thật
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        create("benchmark") {
+            initWith(buildTypes.getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
         }
     }
 
@@ -172,6 +184,10 @@ dependencies {
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
     debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
     releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    add("benchmarkImplementation", "com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    // Baseline Profile — nhận và apply profile khi cài app
+    implementation(libs.profileinstaller)
+
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
